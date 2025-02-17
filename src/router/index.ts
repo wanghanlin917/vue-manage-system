@@ -3,6 +3,8 @@ import { usePermissStore } from '../store/permiss';
 import Home from '../views/home.vue';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
+import {getToken} from "@/utils/cookies"
+import iswWhiteList from "@/config/white-list"
 
 const routes: RouteRecordRaw[] = [
     {
@@ -273,17 +275,35 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     NProgress.start();
-    const role = localStorage.getItem('vuems_name');
-    const permiss = usePermissStore();
-
-    if (!role && to.meta.noAuth !== true) {
-        next('/login');
-    } else if (typeof to.meta.permiss == 'string' && !permiss.key.includes(to.meta.permiss)) {
-        // 如果没有权限，则进入403
-        next('/403');
-    } else {
-        next();
+    // const role = localStorage.getItem('vuems_name');
+    // const permiss = usePermissStore();
+    // console.log("xxxx",role,to.meta.noAuth);
+    const token = getToken()
+    console.log("token",token);
+    console.log(to.path);
+    
+    
+    if(!token){
+        if(iswWhiteList(to)) return next()
+        return next("/login")
     }
+    if (to.path === "/login") {
+        return next({ path: "/" })
+      }
+    next()
+
+
+    // if (!role && to.meta.noAuth !== true) {
+    //     console.log("hahahaha");
+        
+    //     next('/login');
+    // } else if (typeof to.meta.permiss == 'string' && !permiss.key.includes(to.meta.permiss)) {
+    //     // 如果没有权限，则进入403
+    //     next('/403');
+    // } else {
+    //     console.log("dddd");
+    //     next();
+    // }
 });
 
 router.afterEach(() => {

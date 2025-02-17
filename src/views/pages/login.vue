@@ -50,6 +50,7 @@ import { usePermissStore } from '@/store/permiss';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
+import {useUserStore} from "@/store/user"
 
 interface LoginInfo {
     username: string;
@@ -61,7 +62,7 @@ const defParam = lgStr ? JSON.parse(lgStr) : null;
 const checked = ref(lgStr ? true : false);
 
 const router = useRouter();
-const param = reactive<LoginInfo>({
+const param = ref<LoginInfo>({
     username: defParam ? defParam.username : '',
     password: defParam ? defParam.password : '',
 });
@@ -76,22 +77,30 @@ const rules: FormRules = {
     ],
     password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
 };
-const permiss = usePermissStore();
+const permiss = usePermissStore();  
 const login = ref<FormInstance>();
 const submitForm = (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     formEl.validate((valid: boolean) => {
         if (valid) {
-            ElMessage.success('登录成功');
-            localStorage.setItem('vuems_name', param.username);
-            const keys = permiss.defaultList[param.username == 'admin' ? 'admin' : 'user'];
-            permiss.handleSet(keys);
-            router.push('/');
-            if (checked.value) {
+            useUserStore().login(param.value).then(()=>{
+                ElMessage.success('登录成功');
+                localStorage.setItem('vuems_name', param.value.username);
+                const keys = permiss.defaultList[param.value.username == 'admin' ? 'admin' : 'user'];
+                permiss.handleSet(keys);
                 localStorage.setItem('login-param', JSON.stringify(param));
-            } else {
-                localStorage.removeItem('login-param');
-            }
+                router.push({ path: "/" });
+            }).catch((err)=>{
+                console.log("err",err);
+                localStorage.removeItem('login-param'); 
+                ElMessage.error("登陆失败")
+            })
+
+            // if (checked.value) {
+            //     localStorage.setItem('login-param', JSON.stringify(param));
+            // } else {
+            //     localStorage.removeItem('login-param');
+            // }
         } else {
             ElMessage.error('登录失败');
             return false;

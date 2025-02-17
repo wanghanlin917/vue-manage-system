@@ -24,6 +24,22 @@ export default defineConfig({
 			'@': '/src',
 			'~': '/src/assets'
 		}
+	},	
+	// 配置开发服务器
+	server:{
+		host:true,
+		open: false,
+		cors: true,
+		port:3333,
+		proxy:{
+			'/api':{
+				target:"http://127.0.0.1:8000",
+				ws:true,
+				// 是否允许跨域
+				changeOrigin:true
+			}
+		}
+
 	},
 	define: {
 		__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: "true",
