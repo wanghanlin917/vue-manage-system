@@ -68,6 +68,8 @@ return service
 function createRequest(service:AxiosInstance){
     return function<T>(config:AxiosRequestConfig):Promise<T>{
         const token = getToken()
+        console.log("拦截器",token);
+        
         const defaultConfig = {
             headers:{
                 // 携带Token
@@ -78,6 +80,8 @@ function createRequest(service:AxiosInstance){
             data:{}
         }
         const mergeConfig = merge(defaultConfig,config)
+        console.log("end",mergeConfig);
+        
         return service(mergeConfig)
     }
 }

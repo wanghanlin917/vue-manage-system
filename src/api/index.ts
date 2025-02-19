@@ -1,4 +1,4 @@
-import request from '../utils/request';
+import {request} from '../utils/request';
 
 export const fetchData = () => {
     return request({
@@ -9,7 +9,7 @@ export const fetchData = () => {
 
 export const fetchUserData = () => {
     return request({
-        url: './mock/user.json',
+        url: '/user',
         method: 'get'
     });
 };
