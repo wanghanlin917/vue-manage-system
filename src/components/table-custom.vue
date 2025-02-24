@@ -35,15 +35,15 @@
                 </el-tooltip>
             </div>
         </div>
-        <el-table class="mgb20" :style="{ width: '100%' }" border :data="tableData" :row-key="rowKey"
+        <el-table class="mgb20" :style="{ width: '100%' }"  border :data="tableData" :row-key="rowKey"
             @selection-change="handleSelectionChange" table-layout="auto">
-            <template v-for="item in columns" :key="item.prop">
+            <template v-for="item in columns" :key="item.prop" >
                 <el-table-column v-if="item.visible" :prop="item.prop" :label="item.label" :width="item.width"
                     :type="item.type" :align="item.align || 'center'">
-
                     <template #default="{ row, column, $index }" v-if="item.type === 'index'">
                         {{ getIndex($index) }}
                     </template>
+                    <!-- <template v-if="item.prop === 'role'">{{ "raa" }}</template> -->
                     <template #default="{ row, column, $index }" v-if="!item.type">
                         <slot :name="item.prop" :rows="row" :index="$index">
                             <template v-if="item.prop == 'operator'">
@@ -56,6 +56,9 @@
                                 <el-button type="danger" size="small" :icon="Delete" @click="handleDelete(row)">
                                     删除
                                 </el-button>
+                            </template>
+                            <template v-else-if="item.prop == 'role'">
+                                    <el-tag>{{ row.role.map((item)=>{return item.name}).join(",") }}</el-tag>
                             </template>
                             <span v-else-if="item.formatter">
                                 {{ item.formatter(row[item.prop]) }}
@@ -170,6 +173,9 @@ const handleSelectionChange = (selection: any[]) => {
 
 // 当前页码变化的事件
 const handleCurrentChange = (val: number) => {
+    // console.log(val);
+    // console.log("ddddd");
+    // currentPage.value = val
     props.changePage(val)
 }
 

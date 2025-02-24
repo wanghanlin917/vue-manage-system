@@ -3,9 +3,11 @@ import {ElMessage} from 'element-plus'
 import {getToken} from '@/utils/cookies'
 import {merge} from 'lodash'
 import {useUserStore} from '@/store/user'
+import {ref} from 'vue'
 
 
 function logout() {
+    
     useUserStore().logout()
     location.reload()
   }
@@ -31,17 +33,27 @@ service.interceptors.response.use(
         // 二进制数据则直接返回
         const responseType = response.request?.responseType
         if (responseType === "blob" || responseType === "arraybuffer") return apiData
-        const code = apiData.code
-        if (code === undefined) {
+        const code = ref<any>()
+        // console.log("xxxxx",response.status);
+        if (response.status === 204){
+            code.value = 0
+        }else{
+            code.value = apiData.code
+        }
+        
+        if (code.value === undefined) {
             ElMessage.error("非本系统的接口")
             return Promise.reject(new Error("非本系统的接口"))
           }
-          switch (code) {
+          console.log("code",code); 
+          console.log(typeof(code));
+           
+        switch (code.value) {
             case 0:
               // 本系统采用 code === 0 来表示没有业务错误
               console.log("响应拦截器数据", apiData)
               return apiData
-            case 401:
+            case '401':
               // Token 过期时
               return logout()
             case -1:
@@ -73,7 +85,7 @@ function createRequest(service:AxiosInstance){
         const defaultConfig = {
             headers:{
                 // 携带Token
-                Authorizations: token ? `${token}`:undefined,
+                Authorization: token ? `${token}`:undefined,
                 "Content-Type":"application/json"
             },
             baseURL:'/api/',

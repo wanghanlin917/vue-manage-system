@@ -10,6 +10,7 @@ export const useUserStore = defineStore("user",()=>{
     const {data} = await loginApi({username,password})
     cookies.setToken(data.token)
   }
+  
   const logout = ()=>{
     cookies.removeToken()
 

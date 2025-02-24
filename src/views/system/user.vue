@@ -8,7 +8,9 @@
         :total="page.total"
         :viewFunc="handleView"
         :delFunc="handleDelete"
-        :page-change="changePage"
+        :changePage="changePage"
+        :currentPage="page.index"
+        :pageSize="page.size"
         :editFunc="handleEdit"
       >
         <template #toolbarBtn>
@@ -52,45 +54,82 @@ import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CirclePlusFilled } from '@element-plus/icons-vue'
 import { User } from '@/types/user'
-import { fetchUserData } from '@/api'
+// import { fetchUserData } from '@/api'
 import TableCustom from '@/components/table-custom.vue'
 import TableDetail from '@/components/table-detail.vue'
 import TableSearch from '@/components/table-search.vue'
 import { FormOption, FormOptionList } from '@/types/form-option'
+import {fetchUserDataApi,fetchUserAddApi,totalRoleApi,fetchUserEditApi,fetchUserDeleteApi} from '@/api/fetch/index'
+import { onMounted } from 'vue'
 
+
+// 传递角色
+const roleList = ref<any[]>([])
+// 用户对应的角色
+const roles = ref<any>()
 // 查询相关
-const query = reactive({
-  name: ''
+const query = ref({
+  username: ''
 })
 const searchOpt = ref<FormOptionList[]>([
-  { type: 'input', label: '用户名：', prop: 'name' }
+  { type: 'input', label: '用户名：', prop: 'username' }
 ])
 const handleSearch = () => {
   changePage(1)
 }
+let options = ref<FormOption>()
 
 // 表格相关
 let columns = ref([
   { type: 'index', label: '序号', width: 55, align: 'center' },
-  { prop: 'name', label: '用户名' },
+  { prop: 'username', label: '用户名' },
   { prop: 'phone', label: '手机号' },
   { prop: 'role', label: '角色' },
   { prop: 'operator', label: '操作', width: 250 }
 ])
 const page = reactive({
   index: 1,
-  size: 10,
+  size: 5,
   total: 0
 })
 const tableData = ref<User[]>([])
 const getData = async () => {
-  const res = await fetchUserData()
-  console.log('用户', res)
-
-  // tableData.value = res.data.list;
-  // page.total = res.data.pageTotal;
+  const res = await fetchUserDataApi({...query.value,'page':page.index})
+  
+  // roleList.value = roleRes.data.list.map((item)=>{
+  //   return {value:item.id,label:item.name}
+  // })
+  // console.log("角色列表",roleList.value);
+  const data = res.data.list.map((item) => {
+    const { role_txt:[...role_list], ...res} = item
+    // console.log("xxxx",item);
+    return {...res,'role':role_list}
+    
+})
+  tableData.value = data
+  page.total = res.data.pageTotal;
 }
+const getRole = async() =>{
+  const roleRes = await totalRoleApi()
+  const reslist = roleRes.data
+  roleList.value = reslist.map((item) => {return {value:item.id,label:item.name}})
+  // 新增/编辑弹窗相关
+  options.value = {
+  labelWidth: '100px',
+  span: 12,
+  list: [
+    { type: 'input', label: '用户名', prop: 'username', required: true },
+    { type: 'input', label: '手机号', prop: 'phone', required: true },
+    { type: 'input', label: '密码', prop: 'password', required: true },
+    { type: 'input', label: '邮箱', prop: 'email', required: true },
+    { type: 'select', label: '角色', prop: 'role', required: true, opts:[...roleList.value]}
+  ]
+}
+}
+
+getRole()
 getData()
+
 
 const changePage = (val: number) => {
   page.index = val
@@ -98,26 +137,39 @@ const changePage = (val: number) => {
 }
 
 // 新增/编辑弹窗相关
-let options = ref<FormOption>({
-  labelWidth: '100px',
-  span: 12,
-  list: [
-    { type: 'input', label: '用户名', prop: 'name', required: true },
-    { type: 'input', label: '手机号', prop: 'phone', required: true },
-    { type: 'input', label: '密码', prop: 'password', required: true },
-    { type: 'input', label: '邮箱', prop: 'email', required: true },
-    { type: 'input', label: '角色', prop: 'role', required: true }
-  ]
-})
+// let options = ref<FormOption>({
+//   labelWidth: '100px',
+//   span: 12,
+//   list: [
+//     { type: 'input', label: '用户名', prop: 'username', required: true },
+//     { type: 'input', label: '手机号', prop: 'phone', required: true },
+//     { type: 'input', label: '密码', prop: 'password', required: true },
+//     { type: 'input', label: '邮箱', prop: 'email', required: true },
+//     { type: 'select', label: '角色', prop: 'role', required: true, opts:[...roleList.value]}
+//     // { type: 'select', label: '角色', prop: 'role', required: true, opts:[{value:'aaa',label:"卡"},{value:'bbbb',label:"东"}]}
+//   ]
+// })
 const visible = ref(false)
 const isEdit = ref(false)
-const rowData = ref({})
+const rowData = ref<any>({})
 const handleEdit = (row: User) => {
+  console.log("haahahah");
+  console.log(row);
   rowData.value = { ...row }
+  rowData.value['role']=rowData.value['role'].map((item) => {return item.id})
+   
   isEdit.value = true
   visible.value = true
 }
-const updateData = () => {
+const updateData = async (data:any) => {
+  // const res = await fetchUserAddApi(data)
+  // console.log("dddddd",isEdit.value);
+  if (isEdit.value){
+      await fetchUserEditApi(data,rowData.value.id)
+  }else{
+    await fetchUserAddApi(data)
+  }
+  
   closeDialog()
   getData()
 }
@@ -141,7 +193,7 @@ const handleView = (row: User) => {
       label: '用户ID'
     },
     {
-      prop: 'name',
+      prop: 'username',
       label: '用户名'
     },
     {
@@ -169,8 +221,10 @@ const handleView = (row: User) => {
 }
 
 // 删除相关
-const handleDelete = (row: User) => {
+const handleDelete =async (row: User) => {
+  await fetchUserDeleteApi(row.id)
   ElMessage.success('删除成功')
+  getData()
 }
 </script>
 

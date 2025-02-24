@@ -3,7 +3,13 @@
 		<el-descriptions-item v-for="item in list" :span="item.span">
 			<template #label> {{ item.label }} </template>
 			<slot :name="item.prop" :rows="row">
-				{{ item.value || row[item.prop] }}
+				
+				<template v-if="item.prop == 'role'">
+					{{ row.role.map((item)=>{return item.name}).join(',') }}
+				</template>
+				<template v-else>
+					{{ item.value || row[item.prop] }}
+				</template>
 			</slot>
 		</el-descriptions-item>
 	</el-descriptions>

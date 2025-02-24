@@ -8,7 +8,7 @@
 						:placeholder="item.placeholder" clearable></el-input>
 					<el-input-number v-else-if="item.type === 'number'" v-model="form[item.prop]"
 						:disabled="item.disabled" controls-position="right"></el-input-number>
-					<el-select v-else-if="item.type === 'select'" v-model="form[item.prop]" :disabled="item.disabled"
+					<el-select v-else-if="item.type === 'select'" multiple v-model="form[item.prop]" :disabled="item.disabled"
 						:placeholder="item.placeholder" clearable>
 						<el-option v-for="opt in item.opts" :label="opt.label" :value="opt.value"></el-option>
 					</el-select>
@@ -41,7 +41,6 @@
 import { FormOption } from '@/types/form-option';
 import { FormInstance, FormRules, UploadProps } from 'element-plus';
 import { PropType, ref } from 'vue';
-
 const { options, formData, edit, update } = defineProps({
 	options: {
 		type: Object as PropType<FormOption>,
